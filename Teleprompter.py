@@ -2,13 +2,16 @@ from PyQt6.QtCore import Qt, QPoint, pyqtSlot
 from PyQt6.QtGui import QColor, QPainter, QGuiApplication
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
+
 class Teleprompter(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAutoFillBackground(False)
         self.label = QLabel()
-        self.label.setStyleSheet("color: dark-green; font-size: 24px; qproperty-alignment: AlignCenter; background-color: rgba(0, 0, 0, 0);")  # Updated style sheet
+        self.label.setStyleSheet(
+            "color: dark-green; font-size: 24px; qproperty-alignment: AlignCenter; background-color: rgba(0, 0, 0, 0);"
+        )  # Updated style sheet
         layout = QVBoxLayout()
         layout.addWidget(self.label)
         self.setLayout(layout)
@@ -56,3 +59,48 @@ class Teleprompter(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self.mouse_down = False
             event.accept()
+
+    def start_scrolling(self, text, words_per_minute=250):
+        self.scroll_thread = threading.Thread(
+            target=self._timed_update, args=(text, words_per_minute)
+        )
+        self.scroll_thread.start()
+
+    def _timed_update(self, text, words_per_minute):
+        words = text.split()
+        num_words = len(words)
+        time_per_word = 60 / words_per_minute
+        punctuation_delay = time_per_word * 1.5
+
+        for index in range(num_words + 1):
+            new_text = self._bold_one_word_at_a_time(text, index)
+            QMetaObject.invokeMethod(
+                self,
+                "update_text",
+                Qt.ConnectionType.QueuedConnection,
+                QtCore.Q_ARG(str, new_text),
+            )
+            current_word = words[index] if index < num_words else ""
+            if current_word.endswith((".", ",", ";", ":", "?", "!")):
+                time.sleep(punctuation_delay)
+            else:
+                adjusted_speed = self._adjust_speed_based_on_word_length(
+                    current_word, time_per_word, 0.15
+                )
+                time.sleep(adjusted_speed)
+
+    @staticmethod
+    def _bold_one_word_at_a_time(text, index):
+        words = text.split()
+        if index < len(words):
+            words[index] = f"<b>{words[index]}</b>"
+        else:
+            return ""  # Return an empty string when the index is out of range
+        return " ".join(words[max(0, index - 2) : index + 3])
+
+    @staticmethod
+    def _adjust_speed_based_on_word_length(word, base_speed, multiplier):
+        adjusted_speed = base_speed * max(
+            len(word) * multiplier, 0.5
+        )  # Ensure a minimum speed
+        return adjusted_speed

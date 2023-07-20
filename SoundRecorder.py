@@ -1,6 +1,6 @@
 import pyaudio
 import wave
-import audioop
+import threading
 
 
 class SoundRecorder:
@@ -8,7 +8,6 @@ class SoundRecorder:
     FORMAT = pyaudio.paInt16  # Audio format
     CHANNELS = 1  # Number of audio channels
     RATE = 44100  # Sampling rate
-    RECORD_SECONDS = 60  # Duration of recording
     SILENCE_THRESHOLD = 500  # Amount of RMS energy for a segment to be considered silence
     SILENCE_DURATION = 3  # Duration of silence (in seconds) before recording is stopped
 
@@ -20,11 +19,10 @@ class SoundRecorder:
         self.wave_file = None
         self.silence_counter = 0
 
+
     def start_recording(self):
-        # Set the input device to the virtual audio device
         input_device_index = None
 
-        # if no input device is provided, use the default input device (system mic)
         if self.device_name is None:
             input_device_index = self.audio.get_default_input_device_info()["index"]
         else:
@@ -38,43 +36,36 @@ class SoundRecorder:
                 print(f"Error: {self.device_name} virtual audio device not found.")
                 return
 
-        # Open the audio stream
         self.stream = self.audio.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
                                       input=True, input_device_index=input_device_index,
                                       frames_per_buffer=self.CHUNK_SIZE)
 
-        # Create a wave file to save the recorded audio
         self.wave_file = wave.open(self.file_name, "wb")
         self.wave_file.setnchannels(self.CHANNELS)
         self.wave_file.setsampwidth(self.audio.get_sample_size(self.FORMAT))
         self.wave_file.setframerate(self.RATE)
 
-        print("Recording setup complete.")
+        # Start the recording thread
+        self.is_recording = True
+        self.recording_thread = threading.Thread(target=self.record)
+        self.recording_thread.start()
 
-    def record(self):
-        if not self.stream or not self.wave_file:
-            print("Error: Recording not set up.")
-            return
-
-        # Record the audio
-        print("Recording started...")
-        for i in range(0, int(self.RATE / self.CHUNK_SIZE * self.RECORD_SECONDS)):
-            data = self.stream.read(self.CHUNK_SIZE)
-            self.wave_file.writeframes(data)
-            rms_energy = audioop.rms(data, 2)
-            if rms_energy < self.SILENCE_THRESHOLD:
-                self.silence_counter += 1
-                if self.silence_counter >= self.SILENCE_DURATION * (self.RATE / self.CHUNK_SIZE):
-                    print("Silence detected. Recording stopped.")
-                    break
-            else:
-                self.silence_counter = 0
-
-        print("Recording finished.")
+        print("Recording setup complete and recording started.")
 
     def stop_recording(self):
+        self.is_recording = False
+        # Wait for the recording thread to finish
+        if self.recording_thread:
+            self.recording_thread.join()
+        print("Recording stopped.")
+
+    def record(self):
+        while self.is_recording:
+            data = self.stream.read(self.CHUNK_SIZE)
+            self.wave_file.writeframes(data)
+
+        # Cleanup after recording
         if self.stream:
-            # Close the audio stream and PyAudio
             self.stream.stop_stream()
             self.stream.close()
             self.audio.terminate()

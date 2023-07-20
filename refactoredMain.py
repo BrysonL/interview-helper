@@ -77,9 +77,11 @@ def continue_conversation(window):
 
         # Start the recording process
         recorder.start_recording()
+        time.sleep(5)
+        recorder.stop_recording()
 
-        transcriber = Transcriber(API_KEY, AUDIO_FILE_PATH, TRANSCRIPTION_MODEL)
-        transcript = transcriber.transcribe_audio()
+        transcriber = Transcriber(API_KEY, TRANSCRIPTION_MODEL)
+        transcript = transcriber.transcribe_audio(AUDIO_FILE_PATH)
         next_message = transcript['text']
         next_message = "What are some of your greatest strengths and weaknesses?"
         print(next_message)
@@ -100,7 +102,7 @@ def continue_conversation(window):
         response = text_responder.generate_response(next_message)
         message = response['choices'][0]['message']['content']
         formatted_text = message
-        timed_update(window, formatted_text)
+        window.start_scrolling(formatted_text)
 
         # Not used, just for waiting purposes
         new_text = input("Press enter to continue")
