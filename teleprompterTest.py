@@ -6,7 +6,7 @@ import sys
 def main():
     app = QApplication(sys.argv)
 
-    teleprompter = Teleprompter()
+    teleprompter = Teleprompter(scroll_direction="horizontal")
     print("Teleprompter created")
 
     # QTimer.singleShot will call the function after a delay (in milliseconds)

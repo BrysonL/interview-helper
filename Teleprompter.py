@@ -1,14 +1,14 @@
 import threading
 import time
 import PyQt6.QtCore as QtCore
+import PyQt6.QtGui as QtGui
 from PyQt6.QtCore import Qt, QPoint, pyqtSlot, QMetaObject
 from PyQt6.QtGui import QColor, QPainter, QGuiApplication
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
-import sys
+from PyQt6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
 
 
 class Teleprompter(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, scroll_direction="horizontal", parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
 
         # Move window to the top center of the screen
@@ -17,33 +17,35 @@ class Teleprompter(QWidget):
             screen.width() // 2 - self.width() // 2, 0, self.width(), self.height()
         )
 
-        # Make the window transparent
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAutoFillBackground(False)
-        self.label = QLabel()
-        self.label.setStyleSheet(
-            "color: dark-green; font-size: 24px; qproperty-alignment: AlignCenter; background-color: rgba(0, 0, 0, 0);"
+        self.text_widget = QTextEdit(self)
+        self.text_widget.setReadOnly(True)
+        self.text_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.text_widget.setStyleSheet(
+            "color: white; font-size: 32px; qproperty-alignment: AlignCenter; background-color: black;"
         )  # Updated style sheet
         layout = QVBoxLayout()
-        layout.addWidget(self.label)
+        layout.addWidget(self.text_widget)
+        layout.setContentsMargins(0, 0, 0, 0)  # Removes layout margins
         self.setLayout(layout)
         self.mouse_down = False
         self.offset = QPoint()
 
-        # Set the child label (window) size to 30% of the screen width and 10% of the screen height
+        # Set the child text_widget (window) size to 30% of the screen width and 10% of the screen height
         width = screen.width() * 0.3
         height = screen.height() * 0.1
-        self.label.setFixedWidth(width)
-        self.label.setFixedHeight(height)
-        self.label.setWordWrap(True)
+        self.text_widget.setFixedWidth(width)
+        self.text_widget.setFixedHeight(height)
 
         # Set scrolling control variables
-        self.scroll_state = 'stop'  # or 'play' or 'reverse'
+        self.scroll_state = "stop"  # or 'play' or 'reverse'
         self.current_index = 0  # the current word being displayed
+        self.scroll_direction = scroll_direction
 
         # Display the window
         self.show()
-        self.start_scrolling("Hello world! Here's a test of the teleprompter that is more than a few words long.")
+        self.start_scrolling(
+            "Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long."
+        )
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -58,8 +60,9 @@ class Teleprompter(QWidget):
 
     @pyqtSlot(str)
     def update_text(self, text):
-        self.label.setText(text)
-        self.label.adjustSize()  # Adjust the QLabel size to fit the text
+        self.text_widget.setHtml(text)
+        
+        self.text_widget.adjustSize()  # Adjust the QLabel size to fit the text
         self.adjustSize()  # Adjust the window size to fit the QLabel
         self.center_window()  # Center the window at the top of the screen
         self.repaint()
@@ -80,7 +83,7 @@ class Teleprompter(QWidget):
             self.mouse_down = False
             event.accept()
 
-    def start_scrolling(self, text, words_per_minute=100):
+    def start_scrolling(self, text, words_per_minute=110):
         # Set scrolling control variables
         self.text = text
         self.words_per_minute = words_per_minute
@@ -91,21 +94,29 @@ class Teleprompter(QWidget):
         self.punctuation_delay = 1.5
 
         # Start the thread that will update the text
-        self.scroll_thread = threading.Thread(target=self._timed_update)
+        if self.scroll_direction == "horizontal":
+            self.scroll_thread = threading.Thread(target=self._timed_update_horizontal)
+        else:
+            self.scroll_thread = threading.Thread(target=self._timed_update_vertical)
         self.scroll_thread.start()
 
         # Update the teleprompter with the first thing to display so that the user knows it's ready
-        new_text = self._bold_one_word_at_a_time(
-            self.text, self.current_index
-        )
-        QMetaObject.invokeMethod(
-            self,
-            "update_text",
-            Qt.ConnectionType.QueuedConnection,
-            QtCore.Q_ARG(str, new_text),
-        )
+        if self.scroll_direction == "horizontal":
+            QMetaObject.invokeMethod(
+                self,
+                "update_text",
+                Qt.ConnectionType.QueuedConnection,
+                QtCore.Q_ARG(str, self._bold_one_word_at_a_time(self.text, 0)),
+            )
+        else:
+            QMetaObject.invokeMethod(
+                self,
+                "update_text",
+                Qt.ConnectionType.QueuedConnection,
+                QtCore.Q_ARG(str, self.text),
+            )
 
-    def _timed_update(self):
+    def _timed_update_horizontal(self):
         while True:
             if self.scroll_state == "play":
                 if self.current_index < self.num_words:
@@ -149,6 +160,29 @@ class Teleprompter(QWidget):
                         time.sleep(adjusted_speed)
             elif self.scroll_state == "stop":
                 time.sleep(0.1)  # sleep a bit to not use CPU excessively
+
+    def _timed_update_vertical(self):
+        while True:
+            if self.scroll_state == "play":
+                # Perform the scroll by updating the QTextEdit's vertical scrollbar's value
+                scroll_bar = self.text_widget.verticalScrollBar()
+                new_value = scroll_bar.value() + 1
+                if new_value <= scroll_bar.maximum():
+                    scroll_bar.setValue(new_value)
+                    time.sleep(0.03)  # Modify this value to adjust the scroll speed
+                else:
+                    time.sleep(0.05)  # Don't use CPU excessively if we're at the bottom
+            elif self.scroll_state == "reverse":
+                # Perform the scroll by updating the QTextEdit's vertical scrollbar's value
+                scroll_bar = self.text_widget.verticalScrollBar()
+                new_value = scroll_bar.value() - 1
+                if new_value >= scroll_bar.minimum():
+                    scroll_bar.setValue(new_value)
+                    time.sleep(0.03)
+                else:
+                    time.sleep(0.05)  # Don't use CPU excessively if we're at the top
+            elif self.scroll_state == "stop":
+                time.sleep(0.1)
 
     # Here would be your functions to control the scroll_state
     def play(self):
