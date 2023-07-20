@@ -17,6 +17,8 @@ class SoundRecorder:
         self.stream = None
         self.device_name = device_name
         self.file_name = recording_file_destination
+        self.wave_file = None
+        self.silence_counter = 0
 
     def start_recording(self):
         # Set the input device to the virtual audio device
@@ -47,9 +49,15 @@ class SoundRecorder:
         self.wave_file.setsampwidth(self.audio.get_sample_size(self.FORMAT))
         self.wave_file.setframerate(self.RATE)
 
+        print("Recording setup complete.")
+
+    def record(self):
+        if not self.stream or not self.wave_file:
+            print("Error: Recording not set up.")
+            return
+
         # Record the audio
         print("Recording started...")
-        self.silence_counter = 0
         for i in range(0, int(self.RATE / self.CHUNK_SIZE * self.RECORD_SECONDS)):
             data = self.stream.read(self.CHUNK_SIZE)
             self.wave_file.writeframes(data)
@@ -63,7 +71,6 @@ class SoundRecorder:
                 self.silence_counter = 0
 
         print("Recording finished.")
-        self.stop_recording()
 
     def stop_recording(self):
         if self.stream:
@@ -73,3 +80,4 @@ class SoundRecorder:
             self.audio.terminate()
             self.wave_file.close()
             self.stream = None
+            self.wave_file = None

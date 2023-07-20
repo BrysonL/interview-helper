@@ -120,7 +120,7 @@ def create_window_with_transparent_background(text):
                        window.height())  # Move window to the top center of the screen
 
     # Run the update_text_in_window function in a separate thread
-    update_thread = threading.Thread(target=test_timing, args=(window,))
+    update_thread = threading.Thread(target=continue_conversation, args=(window,))
     update_thread.start()
 
     window.show()
