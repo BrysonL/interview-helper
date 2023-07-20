@@ -80,18 +80,30 @@ class Teleprompter(QWidget):
             self.mouse_down = False
             event.accept()
 
-    def start_scrolling(self, text, words_per_minute=250):
-        print("start_scrolling called")
+    def start_scrolling(self, text, words_per_minute=100):
+        # Set scrolling control variables
         self.text = text
         self.words_per_minute = words_per_minute
         self.words = self.text.split()
+        self.current_index = 0
         self.num_words = len(self.words)
         self.time_per_word = 60 / self.words_per_minute
         self.punctuation_delay = 1.5
 
+        # Start the thread that will update the text
         self.scroll_thread = threading.Thread(target=self._timed_update)
         self.scroll_thread.start()
-        print("start_scrolling finished")
+
+        # Update the teleprompter with the first thing to display so that the user knows it's ready
+        new_text = self._bold_one_word_at_a_time(
+            self.text, self.current_index
+        )
+        QMetaObject.invokeMethod(
+            self,
+            "update_text",
+            Qt.ConnectionType.QueuedConnection,
+            QtCore.Q_ARG(str, new_text),
+        )
 
     def _timed_update(self):
         while True:
@@ -100,7 +112,6 @@ class Teleprompter(QWidget):
                     new_text = self._bold_one_word_at_a_time(
                         self.text, self.current_index
                     )
-                    print(new_text)
                     QMetaObject.invokeMethod(
                         self,
                         "update_text",

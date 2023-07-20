@@ -18,6 +18,7 @@ class SoundRecorder:
         self.file_name = recording_file_destination
         self.wave_file = None
         self.silence_counter = 0
+        self.is_recording = False
 
 
     def start_recording(self):
@@ -68,7 +69,12 @@ class SoundRecorder:
         if self.stream:
             self.stream.stop_stream()
             self.stream.close()
-            self.audio.terminate()
             self.wave_file.close()
             self.stream = None
             self.wave_file = None
+
+    def close(self):
+        self.audio.terminate()
+    
+    def __del__(self):
+        self.close()

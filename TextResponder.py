@@ -15,4 +15,4 @@ class TextResponder:
         )
         self.messages.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
 
-        return response
+        return response['choices'][0]['message']['content']
