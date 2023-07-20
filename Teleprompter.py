@@ -1,14 +1,23 @@
-from PyQt6.QtCore import Qt, QPoint, pyqtSlot
+import threading
+import time
+import PyQt6.QtCore as QtCore
+from PyQt6.QtCore import Qt, QPoint, pyqtSlot, QMetaObject
 from PyQt6.QtGui import QColor, QPainter, QGuiApplication
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QApplication
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 import sys
+
 
 class Teleprompter(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
-        screen = QGuiApplication.primaryScreen().geometry()
-        self.setGeometry(screen.width() // 2 - self.width() // 2, 0, self.width(), self.height())  # Move window to the top center of the screen
 
+        # Move window to the top center of the screen
+        screen = QGuiApplication.primaryScreen().geometry()
+        self.setGeometry(
+            screen.width() // 2 - self.width() // 2, 0, self.width(), self.height()
+        )
+
+        # Make the window transparent
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAutoFillBackground(False)
         self.label = QLabel()
@@ -20,19 +29,21 @@ class Teleprompter(QWidget):
         self.setLayout(layout)
         self.mouse_down = False
         self.offset = QPoint()
-        print("qwidget stuff")
 
-        screen = QGuiApplication.primaryScreen().geometry()
+        # Set the child label (window) size to 30% of the screen width and 10% of the screen height
         width = screen.width() * 0.3
         height = screen.height() * 0.1
         self.label.setFixedWidth(width)
         self.label.setFixedHeight(height)
         self.label.setWordWrap(True)
-        print("Screen created")
 
+        # Set scrolling control variables
+        self.scroll_state = 'stop'  # or 'play' or 'reverse'
+        self.current_index = 0  # the current word being displayed
+
+        # Display the window
         self.show()
-        self.update_text("Hello world!")
-        print("Teleprompter initialized.")
+        self.start_scrolling("Hello world! Here's a test of the teleprompter that is more than a few words long.")
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -70,33 +81,76 @@ class Teleprompter(QWidget):
             event.accept()
 
     def start_scrolling(self, text, words_per_minute=250):
-        self.scroll_thread = threading.Thread(
-            target=self._timed_update, args=(text, words_per_minute)
-        )
+        print("start_scrolling called")
+        self.text = text
+        self.words_per_minute = words_per_minute
+        self.words = self.text.split()
+        self.num_words = len(self.words)
+        self.time_per_word = 60 / self.words_per_minute
+        self.punctuation_delay = 1.5
+
+        self.scroll_thread = threading.Thread(target=self._timed_update)
         self.scroll_thread.start()
+        print("start_scrolling finished")
 
-    def _timed_update(self, text, words_per_minute):
-        words = text.split()
-        num_words = len(words)
-        time_per_word = 60 / words_per_minute
-        punctuation_delay = time_per_word * 1.5
+    def _timed_update(self):
+        while True:
+            if self.scroll_state == "play":
+                if self.current_index < self.num_words:
+                    new_text = self._bold_one_word_at_a_time(
+                        self.text, self.current_index
+                    )
+                    print(new_text)
+                    QMetaObject.invokeMethod(
+                        self,
+                        "update_text",
+                        Qt.ConnectionType.QueuedConnection,
+                        QtCore.Q_ARG(str, new_text),
+                    )
+                    current_word = self.words[self.current_index]
+                    adjusted_speed = self._adjust_speed_based_on_word_length(
+                        current_word, self.time_per_word, 0.15
+                    )
+                    if current_word.endswith((".", ",", ";", ":", "?", "!")):
+                        time.sleep(adjusted_speed * self.punctuation_delay)
+                    else:
+                        time.sleep(adjusted_speed)
+                    self.current_index += 1
+            elif self.scroll_state == "reverse":
+                if self.current_index > 0:
+                    self.current_index -= 1
+                    new_text = self._bold_one_word_at_a_time(
+                        self.text, self.current_index
+                    )
+                    QMetaObject.invokeMethod(
+                        self,
+                        "update_text",
+                        Qt.ConnectionType.QueuedConnection,
+                        QtCore.Q_ARG(str, new_text),
+                    )
+                    current_word = self.words[self.current_index]
+                    adjusted_speed = self._adjust_speed_based_on_word_length(
+                        current_word, self.time_per_word, 0.15
+                    )
+                    if current_word.endswith((".", ",", ";", ":", "?", "!")):
+                        time.sleep(adjusted_speed * self.punctuation_delay)
+                    else:
+                        time.sleep(adjusted_speed)
+            elif self.scroll_state == "stop":
+                time.sleep(0.1)  # sleep a bit to not use CPU excessively
 
-        for index in range(num_words + 1):
-            new_text = self._bold_one_word_at_a_time(text, index)
-            QMetaObject.invokeMethod(
-                self,
-                "update_text",
-                Qt.ConnectionType.QueuedConnection,
-                QtCore.Q_ARG(str, new_text),
-            )
-            current_word = words[index] if index < num_words else ""
-            if current_word.endswith((".", ",", ";", ":", "?", "!")):
-                time.sleep(punctuation_delay)
-            else:
-                adjusted_speed = self._adjust_speed_based_on_word_length(
-                    current_word, time_per_word, 0.15
-                )
-                time.sleep(adjusted_speed)
+    # Here would be your functions to control the scroll_state
+    def play(self):
+        print("play called")
+        self.scroll_state = "play"
+
+    def stop(self):
+        print("stop called")
+        self.scroll_state = "stop"
+
+    def reverse(self):
+        print("reverse called")
+        self.scroll_state = "reverse"
 
     @staticmethod
     def _bold_one_word_at_a_time(text, index):
