@@ -1,11 +1,17 @@
 from PyQt6.QtCore import Qt, QPoint, pyqtSlot
 from PyQt6.QtGui import QColor, QPainter, QGuiApplication
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget, QApplication
+import sys
 
 
 class Teleprompter(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
+        
+        self.app = QApplication(sys.argv)
+        screen = QGuiApplication.primaryScreen().geometry()
+        self.setGeometry(screen.width() // 2 - self.width() // 2, 0, self.width(), self.height())  # Move window to the top center of the screen
+
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAutoFillBackground(False)
         self.label = QLabel()
@@ -24,6 +30,9 @@ class Teleprompter(QWidget):
         self.label.setFixedWidth(width)
         self.label.setFixedHeight(height)
         self.label.setWordWrap(True)
+
+        self.show()
+        self.update_text("Hello world!")
 
     def paintEvent(self, event):
         painter = QPainter(self)
