@@ -84,7 +84,12 @@ class Teleprompter(QWidget):
         self.text_widget.adjustSize()  # Adjust the QLabel size to fit the text
         self.adjustSize()  # Adjust the window size to fit the QLabel
         self.center_window()  # Center the window at the top of the screen
+        
         self.repaint()
+
+    @pyqtSlot(str)
+    def continue_update_text(self, text):
+        self.text_widget.setHtml(text)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -140,6 +145,19 @@ class Teleprompter(QWidget):
                 Qt.ConnectionType.QueuedConnection,
                 QtCore.Q_ARG(str, self.text),
             )
+
+    # Used when streaming response from TextResponder
+    def continue_scrolling(self, text):
+        self.text += text
+
+        QMetaObject.invokeMethod(
+            self,
+            "continue_update_text",
+            Qt.ConnectionType.QueuedConnection,
+            QtCore.Q_ARG(str, self.text),
+        )
+
+
 
     def _timed_update_bold(self):
         while True:
