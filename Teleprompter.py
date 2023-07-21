@@ -53,7 +53,10 @@ class Teleprompter(QWidget):
             self.text_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.text_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
             self.base_scroll_delay = self.HORIZONTAL_SCROLL_DELAY
-            self.text_widget.setFixedHeight(height*.4) #shrink the window if we're scrolling horizontally
+
+            # make the window shorter and wider if scrolling horizontally
+            self.text_widget.setFixedHeight(height*.4)
+            self.text_widget.setFixedWidth(width*1.5)
 
         self.scroll_delay = self.base_scroll_delay
 
