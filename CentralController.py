@@ -20,7 +20,7 @@ class CentralController:
     STARTING_MESSAGES = [
         {"role": "system", "content": "Imagine yourself as a product manager in a mock interview scenario. You are helping train interviewers, so your role is to answer their questions as if you were a real product manager. Remember to stay in character throughout the conversation. If you encounter a question you do not have direct information on, use your knowledge to provide a believable response in the context of a product manager. You are embodying a persona with an extensive background in product management across various organizations. You've started your career as a Data Architect Intern at Pearl Automation, where you designed and implemented a cloud-based algorithm regression environment. From there, you moved on to be a Senior Product Manager at Applied Predictive Technologies. There, you led design and engineering projects, researched business and user needs for an external API, and grew a BI product substantially in terms of revenue and client base. Next, you worked at Grubhub as a Product Manager, where you led vision, strategy, and roadmap creation for the Logistics Experimentation and Simulation teams. There, you increased the rate of logistics experimentation significantly and collaborated with various teams to improve the quality of these experiments. Most recently, you served as a Senior Product Manager at Guild Education. In this role, you built a deep understanding of the organization's three-sided marketplace and internal operations to inform software redesign. You drove the definition of first principles for system design, led efforts to remove redundant data stores, and played a key role in accelerating Guild's IPO. You also worked across numerous teams to create and drive alignment on the product roadmap. Throughout your career, you've demonstrated strong collaboration, leadership, and technical skills. Remember to use this background to provide believable responses in the context of a product manager. When encountering an unclear question, remember to ask follow-up questions just as a typical interviewee would."}
     ]
-    TEST_TEXT1 = "Hello world! Here's a test of the teleprompter that is more than a few words long."
+    TEST_TEXT1 = "Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long."
     TEST_TEXT2 = "This is another test to see if we can switch texts."
 
     class KeyListenerThread(QThread):
@@ -47,7 +47,7 @@ class CentralController:
         self.sound_recorder = SoundRecorder(self.AUDIO_FILE_PATH)
         self.transcriber =Transcriber(self.API_KEY, self.TRANSCRIPTION_MODEL)
         self.text_responder = TextResponder(self.API_KEY, self.RESPONSE_MODEL, self.STARTING_MESSAGES)
-        self.teleprompter = Teleprompter(scroll_direction="vertical")
+        self.teleprompter = Teleprompter(scroll_direction="horizontal")
         self.is_recording = False
     
     
@@ -61,7 +61,8 @@ class CentralController:
             "Key.right": self.start_scrolling,
             "Key.down": self.stop_scrolling,
             "Key.left": self.reverse_scrolling,
-            "Key.esc": exit
+            "Key.esc": exit,
+            "'t'": self.test_with_test_string,
         }
 
         # Start the key listener on a separate thread
@@ -104,6 +105,11 @@ class CentralController:
     def display_response(self, text):
         print("Displaying response on teleprompter...")
         self.teleprompter.start_scrolling(text)
+        self.stop_scrolling() # Stop scrolling on new text
+
+    def test_with_test_string(self):
+        print("Testing with test string...")
+        self.display_response(self.TEST_TEXT1)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

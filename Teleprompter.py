@@ -12,6 +12,7 @@ class Teleprompter(QWidget):
 
     VERTICAL_SCROLL_DELAY = 0.05  # seconds
     HORIZONTAL_SCROLL_DELAY = 0.005  # seconds
+    SCROLL_DELAY_MULTIPLIER = 1.5
 
     def __init__(self, scroll_direction="horizontal", parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
@@ -45,13 +46,16 @@ class Teleprompter(QWidget):
         self.scroll_state = "stop"  # or 'play' or 'reverse'
         self.current_index = 0  # the current word being displayed
         self.scroll_direction = scroll_direction
-        self.scroll_delay = self.VERTICAL_SCROLL_DELAY
+        self.base_scroll_delay = self.VERTICAL_SCROLL_DELAY
 
         if self.scroll_direction == "horizontal":
             self.text_widget.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
             self.text_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.text_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.scroll_delay = self.HORIZONTAL_SCROLL_DELAY
+            self.base_scroll_delay = self.HORIZONTAL_SCROLL_DELAY
+            self.text_widget.setFixedHeight(height*.4) #shrink the window if we're scrolling horizontally
+
+        self.scroll_delay = self.base_scroll_delay
 
         # Display the window
         self.show()
@@ -229,7 +233,13 @@ class Teleprompter(QWidget):
     # Here would be your functions to control the scroll_state
     def play(self):
         print("play called")
-        self.scroll_state = "play"
+        if self.scroll_state == "play":
+            self.scroll_delay /= self.SCROLL_DELAY_MULTIPLIER # Increase the scroll speed if we're already going
+        elif self.scroll_state == "reverse":
+            self.scroll_delay *= self.SCROLL_DELAY_MULTIPLIER # Decrease the scroll speed if we're reversing
+        else: # Only play if we're stopped
+            self.scroll_delay = self.base_scroll_delay
+            self.scroll_state = "play"
 
     def stop(self):
         print("stop called")
@@ -237,7 +247,13 @@ class Teleprompter(QWidget):
 
     def reverse(self):
         print("reverse called")
-        self.scroll_state = "reverse"
+        if self.scroll_state == "reverse":
+            self.scroll_delay /= self.SCROLL_DELAY_MULTIPLIER # Increase the scroll speed if we're already going
+        elif self.scroll_state == "play":
+            self.scroll_delay *= self.SCROLL_DELAY_MULTIPLIER # Decrease the scroll speed if we're reversing
+        else: # Only reverse if we're stopped
+            self.scroll_delay = self.base_scroll_delay
+            self.scroll_state = "reverse"
 
     @staticmethod
     def _bold_one_word_at_a_time(text, index):
