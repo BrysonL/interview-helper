@@ -89,7 +89,7 @@ class Teleprompter(QWidget):
 
     @pyqtSlot(str)
     def continue_update_text(self, text):
-        text = text.replace(' ', '&nbsp;')
+        text = text.replace(' ', '&nbsp;') # prevent the html from collapsing spaces
         self.text_widget.insertHtml(text)
 
 
