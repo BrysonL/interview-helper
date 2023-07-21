@@ -99,7 +99,7 @@ class CentralController:
 
     def respond_to_transcription(self):
         print("Generating response to transcription...")
-        self.response = self.text_responder.generate_response(self.transcription)
+        self.response = self.text_responder.generate_response_full(self.transcription)
         self.display_response(self.response)
 
     def display_response(self, text):

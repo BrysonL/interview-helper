@@ -77,7 +77,7 @@ def continue_conversation(window):
 
         text_responder = TextResponder(API_KEY, RESPONSE_MODEL, STARTING_MESSAGES)
 
-        response = text_responder.generate_response(next_message)
+        response = text_responder.generate_response_full(next_message)
         message = response['choices'][0]['message']['content']
         formatted_text = message
         timed_update(window, formatted_text)
@@ -88,7 +88,7 @@ def continue_conversation(window):
 
         text_responder = TextResponder(API_KEY, RESPONSE_MODEL, STARTING_MESSAGES)
 
-        response = text_responder.generate_response(next_message)
+        response = text_responder.generate_response_full(next_message)
         message = response['choices'][0]['message']['content']
         formatted_text = message
         timed_update(window, formatted_text)
