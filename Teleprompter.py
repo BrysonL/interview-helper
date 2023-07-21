@@ -10,8 +10,8 @@ class Teleprompter(QWidget):
     WIDTH_MULTIPLIER = 0.2
     HEIGHT_MULTIPLIER = 0.2
 
-    VERTICAL_SCROLL_DELAY = 0.05  # seconds
-    HORIZONTAL_SCROLL_DELAY = 0.005  # seconds
+    VERTICAL_SCROLL_DELAY = 0.075  # seconds
+    HORIZONTAL_SCROLL_DELAY = 0.0075  # seconds
     SCROLL_DELAY_MULTIPLIER = 1.5
 
     def __init__(self, scroll_direction="horizontal", parent=None):
@@ -63,7 +63,7 @@ class Teleprompter(QWidget):
         # Display the window
         self.show()
         self.start_scrolling(
-            "Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long."
+            ""
         )
 
     def paintEvent(self, event):

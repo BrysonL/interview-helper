@@ -22,7 +22,6 @@ class CentralController(QThread):
         def run(self):
             for response in self.response_stream:
                 self.new_text_signal.emit(response)
-                self.msleep(200)
 
     class KeyListenerThread(QThread):
         def __init__(self, hotkeys):
