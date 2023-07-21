@@ -89,7 +89,9 @@ class Teleprompter(QWidget):
 
     @pyqtSlot(str)
     def continue_update_text(self, text):
-        self.text_widget.setHtml(text)
+        text = text.replace(' ', '&nbsp;')
+        self.text_widget.insertHtml(text)
+
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -154,7 +156,7 @@ class Teleprompter(QWidget):
             self,
             "continue_update_text",
             Qt.ConnectionType.QueuedConnection,
-            QtCore.Q_ARG(str, self.text),
+            QtCore.Q_ARG(str, text),
         )
 
 

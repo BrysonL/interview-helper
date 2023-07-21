@@ -58,9 +58,9 @@ class CentralController:
         hotkeys = {
             "Key.shift": self.trigger_recording,
             "Key.shift_r": self.trigger_recording,
-            "Key.right": self.start_scrolling,
-            "Key.down": self.stop_scrolling,
-            "Key.left": self.reverse_scrolling,
+            "'d'": self.start_scrolling,
+            "'s'": self.stop_scrolling,
+            "'a'": self.reverse_scrolling,
             "Key.esc": exit,
             "'t'": self.test_with_test_string,
         }
@@ -125,6 +125,7 @@ class CentralController:
         self.stop_scrolling() # Stop scrolling on new text
         for response in response_stream:
             self.teleprompter.continue_scrolling(response)
+        self.start_scrolling() # Resume scrolling after the response is done
 
     def test_with_test_string(self):
         print("Testing with test string...")
