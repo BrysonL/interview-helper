@@ -8,6 +8,9 @@ from PyQt6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
 
 
 class Teleprompter(QWidget):
+    WIDTH_MULTIPLIER = 0.2
+    HEIGHT_MULTIPLIER = 0.2
+
     def __init__(self, scroll_direction="horizontal", parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
 
@@ -31,8 +34,8 @@ class Teleprompter(QWidget):
         self.offset = QPoint()
 
         # Set the child text_widget (window) size to 30% of the screen width and 10% of the screen height
-        width = screen.width() * 0.3
-        height = screen.height() * 0.2
+        width = screen.width() * self.WIDTH_MULTIPLIER
+        height = screen.height() * self.HEIGHT_MULTIPLIER
         self.text_widget.setFixedWidth(width)
         self.text_widget.setFixedHeight(height)
 

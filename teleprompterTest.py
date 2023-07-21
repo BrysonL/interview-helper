@@ -13,14 +13,14 @@ def main():
     QTimer.singleShot(3000, teleprompter.play)
     print("Teleprompter playing")
 
-    QTimer.singleShot(6000, teleprompter.stop)
-    print("Teleprompter stopped")
+    # QTimer.singleShot(6000, teleprompter.stop)
+    # print("Teleprompter stopped")
 
-    QTimer.singleShot(9000, teleprompter.reverse)
-    print("Teleprompter reversing")
+    # QTimer.singleShot(9000, teleprompter.reverse)
+    # print("Teleprompter reversing")
 
-    QTimer.singleShot(12000, teleprompter.stop)
-    print("Teleprompter stopped")
+    # QTimer.singleShot(12000, teleprompter.stop)
+    # print("Teleprompter stopped")
 
     sys.exit(app.exec())
 
