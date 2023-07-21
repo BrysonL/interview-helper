@@ -80,7 +80,7 @@ class CentralController:
 
     def trigger_recording(self):
         if self.is_recording:
-            self.stop_recording_and_transcribe()
+            self.stop_recording_and_transcribe_stream()
         else:
             self.start_recording()
         
@@ -90,26 +90,45 @@ class CentralController:
         print("Starting recording...")
         self.sound_recorder.start_recording()
 
-    def stop_recording_and_transcribe(self):
+    def stop_recording_and_transcribe_full(self):
         print("Stopping recording and transcribing...")
         self.sound_recorder.stop_recording()
         time.sleep(0.1) # Wait for the file to be written, I think this is required but not 100% sure
         self.transcription = self.transcriber.transcribe_audio(self.AUDIO_FILE_PATH)
-        self.respond_to_transcription()
+        self.respond_to_transcription_full()
 
-    def respond_to_transcription(self):
+    def respond_to_transcription_full(self):
         print("Generating response to transcription...")
         self.response = self.text_responder.generate_response_full(self.transcription)
-        self.display_response(self.response)
+        self.display_response_full(self.response)
 
-    def display_response(self, text):
+    def display_response_full(self, text):
         print("Displaying response on teleprompter...")
         self.teleprompter.start_scrolling(text)
         self.stop_scrolling() # Stop scrolling on new text
 
+    def stop_recording_and_transcribe_stream(self):
+        print("Stopping recording and transcribing...")
+        self.sound_recorder.stop_recording()
+        time.sleep(0.1) # Wait for the file to be written, I think this is required but not 100% sure
+        self.transcription = self.transcriber.transcribe_audio(self.AUDIO_FILE_PATH)
+        self.respond_to_transcription_stream()
+
+    def respond_to_transcription_stream(self):
+        print("Generating response to transcription...")
+        self.response_stream = self.text_responder.generate_response_stream(self.transcription)
+        self.display_response_stream(self.response_stream)
+
+    def display_response_stream(self, response_stream):
+        print("Streaming response to teleprompter...")
+        self.teleprompter.start_scrolling("")
+        self.stop_scrolling() # Stop scrolling on new text
+        for response in response_stream:
+            self.teleprompter.continue_scrolling(response)
+
     def test_with_test_string(self):
         print("Testing with test string...")
-        self.display_response(self.TEST_TEXT1)
+        self.display_response_full(self.TEST_TEXT1)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
