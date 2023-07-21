@@ -32,7 +32,7 @@ class Teleprompter(QWidget):
 
         # Set the child text_widget (window) size to 30% of the screen width and 10% of the screen height
         width = screen.width() * 0.3
-        height = screen.height() * 0.1
+        height = screen.height() * 0.2
         self.text_widget.setFixedWidth(width)
         self.text_widget.setFixedHeight(height)
 
@@ -169,7 +169,7 @@ class Teleprompter(QWidget):
                 new_value = scroll_bar.value() + 1
                 if new_value <= scroll_bar.maximum():
                     scroll_bar.setValue(new_value)
-                    time.sleep(0.03)  # Modify this value to adjust the scroll speed
+                    time.sleep(0.05)  # Modify this value to adjust the scroll speed
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the bottom
             elif self.scroll_state == "reverse":
