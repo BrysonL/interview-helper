@@ -16,7 +16,10 @@ def main():
     text_responder = TextResponder(API_KEY, RESPONSE_MODEL, STARTING_MESSAGES)
     next_message = "What are some of your greatest strengths and weaknesses?"
 
-    text_responder.generate_response_stream(next_message)
+    responses = text_responder.generate_response_stream(next_message)
+
+    for response in responses:
+        print(response)
 
 if __name__ == "__main__":
     main()

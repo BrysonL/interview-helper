@@ -22,6 +22,7 @@ class TextResponder:
         return response["choices"][0]["message"]["content"]
 
     # adapted from https://github.com/trackzero/openai/blob/main/oai-text-gen-with-secrets-and-streaming.py
+    # note: function is a generator, you must iterate over it to get the results
     def generate_response_stream(self, next_message):
         self.messages.append({"role": "user", "content": next_message})
         response = openai.ChatCompletion.create(
@@ -39,10 +40,9 @@ class TextResponder:
             if "content" in chunk_message:
                 message_text = chunk_message["content"]
                 collected_messages += message_text
+                yield message_text
         #         print(f"{message_text}", end="")
         # print(f"\n")
 
         # print(collected_messages)
         self.messages.append({"role": "assistant", "content": collected_messages})
-
-        return collected_messages
