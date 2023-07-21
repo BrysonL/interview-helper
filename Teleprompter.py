@@ -1,7 +1,6 @@
 import threading
 import time
 import PyQt6.QtCore as QtCore
-import PyQt6.QtGui as QtGui
 from PyQt6.QtCore import Qt, QPoint, pyqtSlot, QMetaObject
 from PyQt6.QtGui import QColor, QPainter, QGuiApplication
 from PyQt6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
@@ -10,6 +9,9 @@ from PyQt6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
 class Teleprompter(QWidget):
     WIDTH_MULTIPLIER = 0.2
     HEIGHT_MULTIPLIER = 0.2
+
+    VERTICAL_SCROLL_DELAY = 0.05  # seconds
+    HORIZONTAL_SCROLL_DELAY = 0.005  # seconds
 
     def __init__(self, scroll_direction="horizontal", parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
@@ -43,6 +45,13 @@ class Teleprompter(QWidget):
         self.scroll_state = "stop"  # or 'play' or 'reverse'
         self.current_index = 0  # the current word being displayed
         self.scroll_direction = scroll_direction
+        self.scroll_delay = self.VERTICAL_SCROLL_DELAY
+
+        if self.scroll_direction == "horizontal":
+            self.text_widget.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+            self.text_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.text_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.scroll_delay = self.HORIZONTAL_SCROLL_DELAY
 
         # Display the window
         self.show()
@@ -99,12 +108,18 @@ class Teleprompter(QWidget):
         # Start the thread that will update the text
         if self.scroll_direction == "horizontal":
             self.scroll_thread = threading.Thread(target=self._timed_update_horizontal)
-        else:
+        elif self.scroll_direction == "vertical":
             self.scroll_thread = threading.Thread(target=self._timed_update_vertical)
+        elif self.scroll_direction == "bold":
+            self.scroll_thread = threading.Thread(target=self._timed_update_bold)
+        else:
+            raise ValueError(
+                f"scroll_direction must be 'horizontal', 'vertical', or 'bold', not {self.scroll_direction}"
+            )
         self.scroll_thread.start()
 
         # Update the teleprompter with the first thing to display so that the user knows it's ready
-        if self.scroll_direction == "horizontal":
+        if self.scroll_direction == "bold":
             QMetaObject.invokeMethod(
                 self,
                 "update_text",
@@ -119,7 +134,7 @@ class Teleprompter(QWidget):
                 QtCore.Q_ARG(str, self.text),
             )
 
-    def _timed_update_horizontal(self):
+    def _timed_update_bold(self):
         while True:
             if self.scroll_state == "play":
                 if self.current_index < self.num_words:
@@ -172,7 +187,7 @@ class Teleprompter(QWidget):
                 new_value = scroll_bar.value() + 1
                 if new_value <= scroll_bar.maximum():
                     scroll_bar.setValue(new_value)
-                    time.sleep(0.05)  # Modify this value to adjust the scroll speed
+                    time.sleep(self.scroll_delay)  # Modify this value to adjust the scroll speed
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the bottom
             elif self.scroll_state == "reverse":
@@ -181,11 +196,35 @@ class Teleprompter(QWidget):
                 new_value = scroll_bar.value() - 1
                 if new_value >= scroll_bar.minimum():
                     scroll_bar.setValue(new_value)
-                    time.sleep(0.03)
+                    time.sleep(self.scroll_delay)
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the top
             elif self.scroll_state == "stop":
                 time.sleep(0.1)
+
+    def _timed_update_horizontal(self):
+        while True:
+            if self.scroll_state == "play":
+                # Perform the scroll by updating the QTextEdit's horizontal scrollbar's value
+                scroll_bar = self.text_widget.horizontalScrollBar()
+                new_value = scroll_bar.value() + 1
+                if new_value <= scroll_bar.maximum():
+                    scroll_bar.setValue(new_value)
+                    time.sleep(self.scroll_delay)  # Modify this value to adjust the scroll speed
+                else:
+                    time.sleep(0.05)  # Don't use CPU excessively if we're at the end
+            elif self.scroll_state == "reverse":
+                # Perform the scroll by updating the QTextEdit's horizontal scrollbar's value
+                scroll_bar = self.text_widget.horizontalScrollBar()
+                new_value = scroll_bar.value() - 1
+                if new_value >= scroll_bar.minimum():
+                    scroll_bar.setValue(new_value)
+                    time.sleep(self.scroll_delay)  # Modify this value to adjust the scroll speed
+                else:
+                    time.sleep(0.05)  # Don't use CPU excessively if we're at the start
+            elif self.scroll_state == "stop":
+                time.sleep(0.1)  # sleep a bit to not use CPU excessively
+
 
     # Here would be your functions to control the scroll_state
     def play(self):
