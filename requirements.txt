@@ -1,0 +1,5 @@
+openai==0.27.8
+PyAudio==0.2.13
+pynput==1.7.6
+PyQt6==6.5.1
+python-dotenv==1.0.0
