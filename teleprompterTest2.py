@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QColor, QPainter
 from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
+
 class TransparentBackground(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
@@ -42,8 +43,10 @@ class TransparentBackground(QWidget):
             self.mouse_down = False
             event.accept()
 
+
 def some_function():
     return "New text from function"
+
 
 def update_text_in_window(window):
     time.sleep(5)
@@ -52,6 +55,7 @@ def update_text_in_window(window):
         formatted_text = f"<b>{new_text}</b> is now <i>updated</i>"
         window.update_text(formatted_text)
         new_text = input("new text:")
+
 
 def create_window_with_transparent_background(text):
     app = QApplication(sys.argv)
@@ -65,6 +69,7 @@ def create_window_with_transparent_background(text):
 
     window.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     text = "Sample text"

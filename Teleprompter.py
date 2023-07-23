@@ -50,21 +50,23 @@ class Teleprompter(QWidget):
 
         if self.scroll_direction == "horizontal":
             self.text_widget.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
-            self.text_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.text_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.text_widget.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )
+            self.text_widget.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
             self.base_scroll_delay = self.HORIZONTAL_SCROLL_DELAY
 
             # make the window shorter and wider if scrolling horizontally
-            self.text_widget.setFixedHeight(height*.4)
-            self.text_widget.setFixedWidth(width*1.5)
+            self.text_widget.setFixedHeight(height * 0.4)
+            self.text_widget.setFixedWidth(width * 1.5)
 
         self.scroll_delay = self.base_scroll_delay
 
         # Display the window
         self.show()
-        self.start_scrolling(
-            ""
-        )
+        self.start_scrolling("")
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -80,18 +82,17 @@ class Teleprompter(QWidget):
     @pyqtSlot(str)
     def update_text(self, text):
         self.text_widget.setHtml(text)
-        
+
         self.text_widget.adjustSize()  # Adjust the QLabel size to fit the text
         self.adjustSize()  # Adjust the window size to fit the QLabel
         self.center_window()  # Center the window at the top of the screen
-        
+
         self.repaint()
 
     @pyqtSlot(str)
     def continue_update_text(self, text):
-        text = text.replace(' ', '&nbsp;') # prevent the html from collapsing spaces
+        text = text.replace(" ", "&nbsp;")  # prevent the html from collapsing spaces
         self.text_widget.insertHtml(text)
-
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -159,8 +160,6 @@ class Teleprompter(QWidget):
             QtCore.Q_ARG(str, text),
         )
 
-
-
     def _timed_update_bold(self):
         while True:
             if self.scroll_state == "play":
@@ -214,7 +213,9 @@ class Teleprompter(QWidget):
                 new_value = scroll_bar.value() + 1
                 if new_value <= scroll_bar.maximum():
                     scroll_bar.setValue(new_value)
-                    time.sleep(self.scroll_delay)  # Modify this value to adjust the scroll speed
+                    time.sleep(
+                        self.scroll_delay
+                    )  # Modify this value to adjust the scroll speed
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the bottom
             elif self.scroll_state == "reverse":
@@ -237,7 +238,9 @@ class Teleprompter(QWidget):
                 new_value = scroll_bar.value() + 1
                 if new_value <= scroll_bar.maximum():
                     scroll_bar.setValue(new_value)
-                    time.sleep(self.scroll_delay)  # Modify this value to adjust the scroll speed
+                    time.sleep(
+                        self.scroll_delay
+                    )  # Modify this value to adjust the scroll speed
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the end
             elif self.scroll_state == "reverse":
@@ -246,21 +249,26 @@ class Teleprompter(QWidget):
                 new_value = scroll_bar.value() - 1
                 if new_value >= scroll_bar.minimum():
                     scroll_bar.setValue(new_value)
-                    time.sleep(self.scroll_delay)  # Modify this value to adjust the scroll speed
+                    time.sleep(
+                        self.scroll_delay
+                    )  # Modify this value to adjust the scroll speed
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the start
             elif self.scroll_state == "stop":
                 time.sleep(0.1)  # sleep a bit to not use CPU excessively
 
-
     # Here would be your functions to control the scroll_state
     def play(self):
         print("play called")
         if self.scroll_state == "play":
-            self.scroll_delay /= self.SCROLL_DELAY_MULTIPLIER # Increase the scroll speed if we're already going
+            self.scroll_delay /= (
+                self.SCROLL_DELAY_MULTIPLIER
+            )  # Increase the scroll speed if we're already going
         elif self.scroll_state == "reverse":
-            self.scroll_delay *= self.SCROLL_DELAY_MULTIPLIER # Decrease the scroll speed if we're reversing
-        else: # Only play if we're stopped
+            self.scroll_delay *= (
+                self.SCROLL_DELAY_MULTIPLIER
+            )  # Decrease the scroll speed if we're reversing
+        else:  # Only play if we're stopped
             self.scroll_delay = self.base_scroll_delay
             self.scroll_state = "play"
 
@@ -271,10 +279,14 @@ class Teleprompter(QWidget):
     def reverse(self):
         print("reverse called")
         if self.scroll_state == "reverse":
-            self.scroll_delay /= self.SCROLL_DELAY_MULTIPLIER # Increase the scroll speed if we're already going
+            self.scroll_delay /= (
+                self.SCROLL_DELAY_MULTIPLIER
+            )  # Increase the scroll speed if we're already going
         elif self.scroll_state == "play":
-            self.scroll_delay *= self.SCROLL_DELAY_MULTIPLIER # Decrease the scroll speed if we're reversing
-        else: # Only reverse if we're stopped
+            self.scroll_delay *= (
+                self.SCROLL_DELAY_MULTIPLIER
+            )  # Decrease the scroll speed if we're reversing
+        else:  # Only reverse if we're stopped
             self.scroll_delay = self.base_scroll_delay
             self.scroll_state = "reverse"
 
