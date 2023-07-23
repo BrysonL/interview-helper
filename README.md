@@ -23,6 +23,6 @@ Note: I linked some ChatGPT queries on basic tasks, but didn't try them out on a
 
 ### To run the code:
 - Familiarize yourself with the hotkey assignments (as of this commit they are on lines 75-83 of CentralController.py) and the associated functions.
-  - tl;dr: (either) shift key to start recording; shift key again to stop recording, transcribe, and display the result; `d` to start scrolling the teleprompter; `s` to stop the teleprompter; `a` to reverse the teleprompter; repeated pressing of `a` and `d` speed up and slow down scroll speed.
+  - tl;dr: shift keys start recording; shift keys again stop recording, transcribe, and display the result; `d` to start scrolling the teleprompter; `s` to stop the teleprompter; `a` to reverse the teleprompter; repeated pressing of `a` and `d` speed up and slow down scroll speed.
 - If you're using a virtual environment, [activate it](https://chat.openai.com/share/18b56881-85a8-4fce-9fe2-17e3c3834638)
 - Run CentralController.py
