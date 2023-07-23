@@ -3,6 +3,8 @@ This project provides a teleprompter-like interview experience. It listens to yo
 
 There are a number of requirements for running this project. I've only tested it on an Apple Silicon Mac (M1 Pro); if you have problems running this on another system please let me know.
 
+Note: I linked some ChatGPT queries on basic tasks, but didn't try them out on all systems. YMMV.
+
 ### To get your environment set up:
 - git clone this repo.
 - If desired, [set up a venv for this project](https://chat.openai.com/share/18b56881-85a8-4fce-9fe2-17e3c3834638).
