@@ -8,7 +8,9 @@ class SoundRecorder:
     FORMAT = pyaudio.paInt16  # Audio format
     CHANNELS = 1  # Number of audio channels
     RATE = 44100  # Sampling rate
-    SILENCE_THRESHOLD = 500  # Amount of RMS energy for a segment to be considered silence
+    SILENCE_THRESHOLD = (
+        500  # Amount of RMS energy for a segment to be considered silence
+    )
     SILENCE_DURATION = 3  # Duration of silence (in seconds) before recording is stopped
 
     def __init__(self, recording_file_destination, device_name=None):
@@ -19,7 +21,6 @@ class SoundRecorder:
         self.wave_file = None
         self.silence_counter = 0
         self.is_recording = False
-
 
     def start_recording(self):
         input_device_index = None
@@ -37,9 +38,14 @@ class SoundRecorder:
                 print(f"Error: {self.device_name} virtual audio device not found.")
                 return
 
-        self.stream = self.audio.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE,
-                                      input=True, input_device_index=input_device_index,
-                                      frames_per_buffer=self.CHUNK_SIZE)
+        self.stream = self.audio.open(
+            format=self.FORMAT,
+            channels=self.CHANNELS,
+            rate=self.RATE,
+            input=True,
+            input_device_index=input_device_index,
+            frames_per_buffer=self.CHUNK_SIZE,
+        )
 
         self.wave_file = wave.open(self.file_name, "wb")
         self.wave_file.setnchannels(self.CHANNELS)
@@ -75,6 +81,6 @@ class SoundRecorder:
 
     def close(self):
         self.audio.terminate()
-    
+
     def __del__(self):
         self.close()

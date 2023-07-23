@@ -61,6 +61,7 @@ class CentralController(QThread):
         super().__init__()
 
         self.sound_recorder = SoundRecorder(self.AUDIO_FILE_PATH)
+        # self.sound_recorder = SoundRecorder(self.AUDIO_FILE_PATH, device_name="VB-Cable") # Use this line to record from the VB-Cable virtual audio device
         self.transcriber = Transcriber(self.API_KEY, self.TRANSCRIPTION_MODEL)
         self.text_responder = TextResponder(
             self.API_KEY, self.RESPONSE_MODEL, self.STARTING_MESSAGES

@@ -16,7 +16,7 @@ Note: I linked some ChatGPT queries on basic tasks, but didn't try them out on a
 ### Before running the code:
 - [Create a .env file](https://chat.openai.com/share/15d5f385-f191-48e0-9877-713cdbd00c8c) in the root directory of the project and the line: OPENAI_API_KEY=<ab-YOURAPIKEY>
 - Modify the system message (as of this commit it is on line 55 of the CentralController.py). You can use a [prompt like this](https://chat.openai.com/share/fb1ade46-19b8-4677-969f-7d22002625d2) to generate your message or write it yourself. Use the one in the repo currently as inspiration, it works pretty well.
-- <todo: VB-Cable instructions>
+- If transcribing questions from the system audio, [figure out the source name for your audio driver configured above](https://chat.openai.com/share/be8b296a-4ae6-483a-bf80-24ef945e511a) and add that source name when you create your SoundRecorder (as of this commit it is on line 63 of CentralController.py). If you're using VB-Cable, comment/uncomment the creation calls on lines 63/64, respectively, of CentralController.py.
 - If desired, test out each of the classes (SoundRecorder, Transcriber, TextResponder, Teleprompter) with the included test files before running the CentralController.
 
 ### To run the code:

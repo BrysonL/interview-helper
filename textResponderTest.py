@@ -8,7 +8,10 @@ load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
 RESPONSE_MODEL = "gpt-3.5-turbo"
 STARTING_MESSAGES = [
-    {"role": "system", "content": "Imagine yourself as a product manager in a mock interview scenario. You are helping train interviewers, so your role is to answer their questions as if you were a real product manager. Remember to stay in character throughout the conversation. If you encounter a question you do not have direct information on, use your knowledge to provide a believable response in the context of a product manager."}
+    {
+        "role": "system",
+        "content": "Imagine yourself as a product manager in a mock interview scenario. You are helping train interviewers, so your role is to answer their questions as if you were a real product manager. Remember to stay in character throughout the conversation. If you encounter a question you do not have direct information on, use your knowledge to provide a believable response in the context of a product manager.",
+    }
 ]
 
 
@@ -20,6 +23,7 @@ def main():
 
     for response in responses:
         print(response)
+
 
 if __name__ == "__main__":
     main()

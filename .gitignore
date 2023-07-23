@@ -3,4 +3,6 @@
 *.mov
 *.mp4
 .idea/*
+.idea
 .vscode/*
+.vscode
