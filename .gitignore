@@ -2,3 +2,5 @@
 *.wav
 *.mov
 *.mp4
+.idea/*
+.vscode/*
