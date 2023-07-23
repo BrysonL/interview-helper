@@ -3,6 +3,8 @@ This project provides a teleprompter-like interview experience. It listens to yo
 
 There are a number of requirements for running this project. I've only tested it on an Apple Silicon Mac (M1 Pro); if you have problems running this on another system please let me know.
 
+If you want to see a demo of the interview bot in action, check out [this video](https://youtu.be/7b-gSw81lQg)
+
 Note: I linked some ChatGPT queries on basic tasks, but didn't try them out on all systems. YMMV.
 
 ### To get your environment set up:
