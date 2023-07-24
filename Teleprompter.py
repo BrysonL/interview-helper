@@ -5,15 +5,21 @@ from PyQt6.QtCore import Qt, QPoint, pyqtSlot, QMetaObject
 from PyQt6.QtGui import QColor, QPainter, QGuiApplication
 from PyQt6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
 
-
+# This class will display and scroll through text
 class Teleprompter(QWidget):
+    # Set the size of the window relative to the screen size
     WIDTH_MULTIPLIER = 0.2
     HEIGHT_MULTIPLIER = 0.2
 
+    # Scroll constants
     VERTICAL_SCROLL_DELAY = 0.075  # seconds
     HORIZONTAL_SCROLL_DELAY = 0.0075  # seconds
     SCROLL_DELAY_MULTIPLIER = 1.5
 
+    # The teleprompter can be used to scroll text "vertical", "horizontal", or "bold"
+    # "vertical" will smoothly scroll the text up and down
+    # "horizontal" will smoothly scroll the text left and right
+    # "bold" will bold one word at a time, displaying only a few words at a time (a bit choppy)
     def __init__(self, scroll_direction="horizontal", parent=None):
         super().__init__(parent, Qt.WindowType.FramelessWindowHint)
 
@@ -36,7 +42,7 @@ class Teleprompter(QWidget):
         self.mouse_down = False
         self.offset = QPoint()
 
-        # Set the child text_widget (window) size to 30% of the screen width and 10% of the screen height
+        # Set the child text_widget (window) size
         width = screen.width() * self.WIDTH_MULTIPLIER
         height = screen.height() * self.HEIGHT_MULTIPLIER
         self.text_widget.setFixedWidth(width)
@@ -48,6 +54,7 @@ class Teleprompter(QWidget):
         self.scroll_direction = scroll_direction
         self.base_scroll_delay = self.VERTICAL_SCROLL_DELAY
 
+        # For horizontally scrolling text, change some of the properties
         if self.scroll_direction == "horizontal":
             self.text_widget.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
             self.text_widget.setVerticalScrollBarPolicy(
@@ -73,12 +80,15 @@ class Teleprompter(QWidget):
         painter.setOpacity(0)  # Adjust the background opacity (0-1)
         painter.fillRect(self.rect(), QColor(0, 0, 0, 0))
 
+    # center the window on the screen
     def center_window(self):
         screen = QGuiApplication.primaryScreen().geometry()
         window_size = self.frameSize()
         x = (screen.width() - window_size.width()) // 2
         self.move(x, 0)
 
+    # The first time you're updating the text with a string, use this function to reset window size, etc.
+    # Also used if you are not streaming a response from TextResponder and are waiting for a full update
     @pyqtSlot(str)
     def update_text(self, text):
         self.text_widget.setHtml(text)
@@ -89,11 +99,13 @@ class Teleprompter(QWidget):
 
         self.repaint()
 
+    # Used after the first update when streaming response from TextResponder
     @pyqtSlot(str)
     def continue_update_text(self, text):
         text = text.replace(" ", "&nbsp;")  # prevent the html from collapsing spaces
         self.text_widget.insertHtml(text)
 
+    # Move the window when the user clicks and drags
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.mouse_down = True
@@ -110,6 +122,14 @@ class Teleprompter(QWidget):
             self.mouse_down = False
             event.accept()
 
+    ###
+    # Teleprompter text update functions
+    ###
+
+    # Start scrolling the text
+    # words_per_minute is the speed at which the text will bold if you're using the "bold" setting
+    # If you're using the "vertical" or "horizontal" settings, the speed is controlled by the scroll_delay constant
+    # Call this when you want to start scrolling a full string or with the first result of a stream
     def start_scrolling(self, text, words_per_minute=110):
         # Set scrolling control variables
         self.text = text
@@ -153,6 +173,7 @@ class Teleprompter(QWidget):
     def continue_scrolling(self, text):
         self.text += text
 
+        # UI can only be safely updated from the main thread, so we need to use invokeMethod
         QMetaObject.invokeMethod(
             self,
             "continue_update_text",
@@ -160,6 +181,8 @@ class Teleprompter(QWidget):
             QtCore.Q_ARG(str, text),
         )
 
+    # Bold one word at a time of the text
+    # I like horizontal and vertical scroll better than bold, but this is here if you want it
     def _timed_update_bold(self):
         while True:
             if self.scroll_state == "play":
@@ -205,6 +228,7 @@ class Teleprompter(QWidget):
             elif self.scroll_state == "stop":
                 time.sleep(0.1)  # sleep a bit to not use CPU excessively
 
+    # Scroll the text vertically
     def _timed_update_vertical(self):
         while True:
             if self.scroll_state == "play":
@@ -228,8 +252,9 @@ class Teleprompter(QWidget):
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the top
             elif self.scroll_state == "stop":
-                time.sleep(0.1)
+                time.sleep(0.1) # Don't use CPU excessively if we're stopped
 
+    # Scroll the text horizontally
     def _timed_update_horizontal(self):
         while True:
             if self.scroll_state == "play":
@@ -255,41 +280,55 @@ class Teleprompter(QWidget):
                 else:
                     time.sleep(0.05)  # Don't use CPU excessively if we're at the start
             elif self.scroll_state == "stop":
-                time.sleep(0.1)  # sleep a bit to not use CPU excessively
+                time.sleep(0.1)  # Don't use CPU excessively if we're stopped
 
-    # Here would be your functions to control the scroll_state
+    ###
+    # Scroll state functions
+    ###
+
+    # Start the teleprompter scrolling, speed it up, or slow it down (depending on the current state)
     def play(self):
-        print("play called")
+        # If the teleprompter is already playing, speed it up
         if self.scroll_state == "play":
             self.scroll_delay /= (
                 self.SCROLL_DELAY_MULTIPLIER
-            )  # Increase the scroll speed if we're already going
+            )
+        # If the teleprompter is reversing, slow it down    
         elif self.scroll_state == "reverse":
             self.scroll_delay *= (
                 self.SCROLL_DELAY_MULTIPLIER
-            )  # Decrease the scroll speed if we're reversing
-        else:  # Only play if we're stopped
+            ) 
+        # Otherwise (the teleprompter is stopped), start the teleprompter
+        else:
             self.scroll_delay = self.base_scroll_delay
             self.scroll_state = "play"
 
+    # Stop the teleprompter
     def stop(self):
-        print("stop called")
         self.scroll_state = "stop"
 
+    # Reverse the teleprompter scrolling, speed it up, or slow it down (depending on the current state)
     def reverse(self):
-        print("reverse called")
+        # If the teleprompter is already playing, speed it up
         if self.scroll_state == "reverse":
             self.scroll_delay /= (
                 self.SCROLL_DELAY_MULTIPLIER
-            )  # Increase the scroll speed if we're already going
+            )  
+        # If the teleprompter is reversing, slow it down    
         elif self.scroll_state == "play":
             self.scroll_delay *= (
                 self.SCROLL_DELAY_MULTIPLIER
-            )  # Decrease the scroll speed if we're reversing
-        else:  # Only reverse if we're stopped
+            )  
+        # Otherwise (the teleprompter is stopped), start the teleprompter
+        else:
             self.scroll_delay = self.base_scroll_delay
             self.scroll_state = "reverse"
 
+    ###
+    # Helper functions
+    ###
+
+    # Bold one word at a time of the text
     @staticmethod
     def _bold_one_word_at_a_time(text, index):
         words = text.split()
@@ -299,6 +338,7 @@ class Teleprompter(QWidget):
             return ""  # Return an empty string when the index is out of range
         return " ".join(words[max(0, index - 2) : index + 3])
 
+    # Adjust the update speed based on the length of the word
     @staticmethod
     def _adjust_speed_based_on_word_length(word, base_speed, multiplier):
         adjusted_speed = base_speed * max(

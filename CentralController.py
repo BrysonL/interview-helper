@@ -10,8 +10,13 @@ import os, sys, time
 
 load_dotenv()
 
-
+# This class controls the interview bot/teleprompter
 class CentralController(QThread):
+    ###
+    # Helper classes
+    ###
+
+    # In order to scroll the teleprompter while the response is being generated, we need to use a separate thread
     class ResponseThread(QThread):
         new_text_signal = pyqtSignal(str)
 
@@ -23,6 +28,7 @@ class CentralController(QThread):
             for response in self.response_stream:
                 self.new_text_signal.emit(response)
 
+    # In order to listen for keypresses while the teleprompter is running, we need to use a separate thread
     class KeyListenerThread(QThread):
         def __init__(self, hotkeys):
             super().__init__()
@@ -44,6 +50,11 @@ class CentralController(QThread):
 
             return _on_press
 
+
+    ###
+    # Main class
+    ###
+
     # API and other configurations
     API_KEY = os.getenv("OPENAI_API_KEY")
     AUDIO_FILE_PATH = "recording_test.wav"
@@ -57,6 +68,7 @@ class CentralController(QThread):
     ]
     TEST_TEXT1 = "Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long. Hello world! Here's a test of the teleprompter that is more than a few words long."
 
+    # Spin up all the components of the controller
     def __init__(self):
         super().__init__()
 
@@ -69,10 +81,12 @@ class CentralController(QThread):
         self.teleprompter = Teleprompter(scroll_direction="horizontal")
         self.is_recording = False
 
+    # Start listening for key presses
     def start(self):
         print("Controller started. Waiting for keypress...")
 
         # Define the hotkeys and their corresponding methods
+        # Multiple successive keypresses will call a method multiple times
         hotkeys = {
             "Key.shift": self.trigger_recording,
             "Key.shift_r": self.trigger_recording,
@@ -87,15 +101,21 @@ class CentralController(QThread):
         self.key_listener_thread = self.KeyListenerThread(hotkeys)
         self.key_listener_thread.start()
 
+    # Start the teleprompter scrolling (see Teleprompter.py)
+    # Call repeatedly to speed forward scroll speed or slow down reverse scroll speed
     def start_scrolling(self):
         self.teleprompter.play()
 
+    # Stop the teleprompter scrolling (see Teleprompter.py)
     def stop_scrolling(self):
         self.teleprompter.stop()
 
+    # Reverse the teleprompter scrolling or slow it down (see Teleprompter.py)
+    # Call repeatedly to speed up reverse scroll speed or slow down forward scroll speed
     def reverse_scrolling(self):
         self.teleprompter.reverse()
 
+    # If recording, stop it, otherwise start it
     def trigger_recording(self):
         if self.is_recording:
             self.stop_recording_and_transcribe_stream()
@@ -104,29 +124,42 @@ class CentralController(QThread):
 
         self.is_recording = not self.is_recording
 
+    # Start recording
     def start_recording(self):
         print("Starting recording...")
         self.sound_recorder.start_recording()
 
+    ###
+    # Full response methods, not streaming (see TextResponder.py)
+    ###
+
+    # Stop recording, transcribe the audio, and then call the text responder
     def stop_recording_and_transcribe_full(self):
         print("Stopping recording and transcribing...")
         self.sound_recorder.stop_recording()
         time.sleep(
             0.1
-        )  # Wait for the file to be written, I think this is required but not 100% sure
+        )  # Wait for the file to be written, I think this is required but not 100% sure. If it is required, this is not a 100% safe way to wait for the file.
         self.transcription = self.transcriber.transcribe_audio(self.AUDIO_FILE_PATH)
         self.respond_to_transcription_full()
 
+    # Generate a response to the transcription and display it on the teleprompter
     def respond_to_transcription_full(self):
         print("Generating response to transcription...")
         self.response = self.text_responder.generate_response_full(self.transcription)
         self.display_response_full(self.response)
 
+    # Display the response on the teleprompter
     def display_response_full(self, text):
         print("Displaying response on teleprompter...")
         self.teleprompter.start_scrolling(text)
         self.stop_scrolling()  # Stop scrolling on new text
 
+    ###
+    # Streaming response methods (see TextResponder.py)
+    ###
+
+    # Stop recording, transcribe the audio, and then call the text responder
     def stop_recording_and_transcribe_stream(self):
         print("Stopping recording and transcribing...")
         self.sound_recorder.stop_recording()
@@ -136,6 +169,7 @@ class CentralController(QThread):
         self.transcription = self.transcriber.transcribe_audio(self.AUDIO_FILE_PATH)
         self.respond_to_transcription_stream()
 
+    # Generate a response to the transcription and display it on the teleprompter
     def respond_to_transcription_stream(self):
         print("Generating response to transcription...")
         self.response_stream = self.text_responder.generate_response_stream(
@@ -143,19 +177,27 @@ class CentralController(QThread):
         )
         self.display_response_stream(self.response_stream)
 
+    # Display the response on the teleprompter
     def display_response_stream(self, response_stream):
         print("Streaming response to teleprompter...")
-        self.teleprompter.start_scrolling("")
-        self.stop_scrolling()  # Stop scrolling on new text
+        self.teleprompter.start_scrolling("") # Empty the text on the teleprompter
 
+        self.stop_scrolling()  # Stop scrolling on new text to reset scroll speed
+
+        # response_stream param is a generator, pass that to the threaded response stream
         self.response_thread = self.ResponseThread(response_stream)
+
+        # The response_thread will emit an event with each new piece of text
+        # Connect that event to the teleprompter's continue_scrolling method to add each new piece of text (each word) to the teleprompter
         self.response_thread.new_text_signal.connect(
             self.teleprompter.continue_scrolling
         )
         self.response_thread.start()
 
-        self.start_scrolling()  # Resume scrolling after the response is done
+        self.start_scrolling()  # Start scrolling on the new text
 
+    # Test the teleprompter with a test string
+    # You can also use this to teleprompter a pre-written response (like an answer to "tell me about yourself")
     def test_with_test_string(self):
         print("Testing with test string...")
         self.display_response_full(self.TEST_TEXT1)

@@ -1,6 +1,6 @@
 import openai
 
-
+# v basic. transacribe audio file to text using the Whisper OpenAI API
 class Transcriber:
     def __init__(self, api_key, model):
         openai.api_key = api_key
