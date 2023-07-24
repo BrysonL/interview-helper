@@ -12,6 +12,7 @@ Note: I linked some ChatGPT queries on basic tasks, but didn't try them out on a
 - If desired, [set up a venv for this project](https://chat.openai.com/share/18b56881-85a8-4fce-9fe2-17e3c3834638).
 - Install the requirements from requirements.txt.
   - Note: some of the requirements (like PyAudio) may require additional installation steps. Please ask ChatGPT if you're having issues with any of the packages.
+- Create an OpenAI API key if you do not already have one. Check out their [quickstart tutorial](https://platform.openai.com/docs/quickstart).
 - If you want to transcribe questions from the system audio (e.g. over a video call) (I presume this is most of you), you'll need to install a driver that can listen to system audio. I used [VB-Cable](https://vb-audio.com/Cable/).
 - [Set your primary display](https://chat.openai.com/share/abcf3e01-4a2f-472b-86ba-ad173f6d4ba4) to the display with your camera (or the one you want to look at). The transcriber will show up in the top center of your primary monitor.
 
